@@ -1,0 +1,1442 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080909">
+  <title>GENTLEMAN HUNT — Runner Demo</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080909;
+      --panel: #111313;
+      --panel2: #171919;
+      --line: #303434;
+      --text: #f2f2ee;
+      --muted: #a3aaa6;
+      --silver: #e4e7e2;
+      --green: #c8d9ce;03
+      --gold: #d5c28e;
+      --red: #e59d98;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: var(--bg);
+      font: 14px/1.45 "Segoe UI", Arial, sans-serif;
+    }
+    button, select { font: inherit; }
+    button { color: inherit; cursor: pointer; }
+    .shell { width: min(1100px, 100%); margin: auto; padding: 12px 18px; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      padding: 6px 0 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .crest {
+      width: 42px; height: 42px; display: grid; place-items: center;
+      border: 1px solid #bfc3be; border-radius: 50%;
+      font: 15px Georgia,serif; letter-spacing: 2px;
+    }
+    h1 { margin: 0; font: 600 16px Georgia,serif; letter-spacing: .15em; }
+    .brand small { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; letter-spacing: .16em; }
+    .demo-tag {
+      padding: 7px 10px; border: 1px solid var(--line); border-radius: 5px;
+      color: var(--muted); font-size: 11px;
+    }
+    header > .demo-tag { display: none; }
+    .layout { display: block; padding-top: 10px; }
+    .panel {
+      min-width: 0; padding: 15px; border: 1px solid var(--line);
+      border-radius: 9px; background: var(--panel);
+    }
+    .panel h2 { margin: 0 0 12px; font: 17px Georgia,serif; }
+    .panel h3 { margin: 17px 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+    .muted, .small-note { color: var(--muted); }
+    .small-note { font-size: 11px; line-height: 1.5; }
+    .field { display: grid; gap: 5px; margin: 10px 0; }
+    .field label { color: var(--muted); font-size: 11px; }
+    select {
+      width: 100%; padding: 9px; border: 1px solid var(--line);
+      border-radius: 5px; color: var(--text); background: #090a0a;
+    }
+    .button {
+      padding: 9px 12px; border: 1px solid var(--line); border-radius: 5px;
+      background: #191c1b; transition: background .2s, transform .2s;
+    }
+    .button:hover { background: #252a28; transform: translateY(-1px); }
+    .button.primary { color: #101211; border-color: var(--silver); background: var(--silver); font-weight: 700; }
+    .button:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+    .button.full { width: 100%; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat { padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: #0b0c0c; }
+    .stat span { display: block; color: var(--muted); font-size: 10px; }
+    .stat strong { display: block; margin-top: 3px; font-size: 17px; }
+    .divider { height: 1px; margin: 14px 0; background: var(--line); }
+    .stage-column { min-width: 0; }
+    .game-wrap {
+      position: relative; height: min(76vh, 760px); min-height: 400px;
+      overflow: hidden; border: 1px solid #343a38; border-radius: 9px;
+      background: #101515;
+    }
+    #game {
+      display: block; width: 100%; height: 100%;
+      touch-action: none; user-select: none; -webkit-user-select: none;
+    }
+    .hud {
+      position: absolute; z-index: 2; top: 12px; left: 12px; right: 12px;
+      display: flex; justify-content: space-between; gap: 8px; pointer-events: none;
+    }
+    .hud-box {
+      padding: 7px 10px; border: 1px solid #ffffff27; border-radius: 5px;
+      background: #080909cc; backdrop-filter: blur(8px); font-size: 12px;
+    }
+    .hud-box strong { color: white; }
+    .hud-coins { display: grid; gap: 3px; }
+    .hud-coins > div { display: flex; justify-content: space-between; gap: 12px; }
+    .hud-total { padding-top: 3px; border-top: 1px solid #ffffff30; color: #d5c28e; }
+    .runner-tools {
+      display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px;
+      margin-top: 12px;
+    }
+    .runner-tool {
+      min-width: 0; padding: 13px; border: 1px solid var(--line);
+      border-radius: 8px; background: var(--panel);
+    }
+    .runner-tool h2 { margin: 0 0 6px; font: 16px Georgia,serif; }
+    .runner-tool p { margin: 0 0 9px; }
+    .runner-tool .button { width: 100%; margin-top: 4px; }
+    .referral-link {
+      width: 100%; margin: 3px 0 7px; padding: 8px;
+      border: 1px solid var(--line); border-radius: 5px;
+      color: var(--muted); background: #090a0a; font-size: 11px;
+    }
+    @media (max-width: 680px) {
+      .runner-tools { grid-template-columns: 1fr; }
+    }
+    .overlay {
+      position: absolute; z-index: 3; top: 64px; left: 50%; transform: translateX(-50%);
+      width: min(460px, calc(100% - 24px)); text-align: center;
+    }
+    .overlay-card {
+      position: relative; padding: 12px 42px 12px 16px; border: 1px solid #ffffff30;
+      border-radius: 8px; background: #0c0e0edb; backdrop-filter: blur(8px);
+    }
+    .overlay h2 { margin: 0 0 3px; font: 18px Georgia,serif; }
+    .overlay p { margin: 0; color: var(--muted); font-size: 12px; }
+    .overlay-close {
+      position: absolute; top: 6px; right: 7px; width: 28px; height: 28px;
+      padding: 0; border: 0; border-radius: 5px; background: transparent;
+      color: var(--muted); font-size: 21px; line-height: 1;
+    }
+    .overlay-close:hover { background: #ffffff18; color: var(--text); }
+    .game-controls { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 10px; }
+    .power-list { display: grid; gap: 7px; }
+    .power-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 7px;
+      padding: 8px; border: 1px solid var(--line); border-radius: 6px;
+      background: #0b0c0c;
+    }
+    .power-row span { font-size: 12px; }
+    .power-row small { display: block; color: var(--muted); font-size: 10px; }
+    .power-row .button { padding: 6px 8px; font-size: 11px; }
+    .calendar-head { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; }
+    .calendar-list { display: grid; gap: 5px; max-height: 105px; overflow: auto; margin-top: 8px; }
+    .calendar-day { display: flex; justify-content: space-between; padding: 6px 7px; border-radius: 4px; background: #0a0b0b; font-size: 11px; }
+    .character-list { display: grid; gap: 6px; max-height: 195px; overflow: auto; }
+    .character {
+      display: flex; justify-content: space-between; gap: 5px; align-items: center;
+      padding: 7px; border: 1px solid var(--line); border-radius: 5px; font-size: 11px;
+    }
+    .runner-workshop { margin-top: 14px; }
+    .runner-workshop > summary {
+      padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px;
+      background: var(--panel); cursor: pointer; font: 16px Georgia,serif;
+    }
+    .runner-workshop[open] > summary { border-radius: 8px 8px 0 0; }
+    .workshop-content {
+      display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.4fr); gap: 18px;
+      padding: 15px; border: 1px solid var(--line); border-top: 0;
+      border-radius: 0 0 8px 8px; background: var(--panel);
+    }
+    .workshop-content h2 { margin: 0 0 8px; font: 17px Georgia,serif; }
+    .workshop-content .small-note { margin: 0 0 9px; }
+    .workshop-balance { color: var(--gold); }
+    .character { align-items: flex-start; }
+    .character > span { min-width: 0; }
+    .character small { color: var(--muted); }
+    @media (max-width: 680px) {
+      .workshop-content { grid-template-columns: 1fr; }
+    }
+    .character.selected { border-color: #dfe3dd; }
+    .character .button { padding: 5px 7px; font-size: 10px; white-space: nowrap; }
+    .task-list { display: grid; gap: 7px; }
+    .task { padding: 8px; border: 1px solid var(--line); border-radius: 5px; }
+    .task a { color: #e1e3de; font-size: 11px; }
+    .task button { margin-top: 6px; padding: 5px 7px; font-size: 10px; }
+    .notice { min-height: 34px; margin: 9px 0 0; color: var(--gold); font-size: 11px; }
+    .touch-controls { display: none; gap: 6px; }
+    .touch-controls button { min-width: 43px; padding: 8px; }
+    @media (max-width: 680px) {
+      .shell { padding: 10px; }
+      header { align-items: flex-start; }
+      .demo-tag { max-width: 145px; text-align: center; }
+      .left-panel, .right-panel { display: none; }
+      .game-wrap { height: 68vh; min-height: 360px; }
+      .game-controls { flex-wrap: wrap; justify-content: center; }
+      .touch-controls { display: flex; }
+      .game-controls > .small-note { display: none; }
+    }
+    .left-panel, .right-panel { display: none; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand">
+        <div class="crest">GH</div>
+        <div><h1>GENTLEMAN HUNT</h1><small>RUNNER · LOCAL DEMO</small></div>
+      </div>
+      <div class="demo-tag">No real payments, email checks, or transfers</div>
+    </header>
+
+    <main class="layout">
+      <aside class="panel left-panel">
+        <h2>Runner profile</h2>
+        <div class="stats">
+          <div class="stat"><span>COIN BALANCE</span><strong id="coins">0.00</strong></div>
+          <div class="stat"><span>DAILY LIMIT</span><strong id="limit">500</strong></div>
+          <div class="stat"><span>PER COIN PICKUP</span><strong id="coinRate">0.01</strong></div>
+          <div class="stat"><span>BEST DISTANCE</span><strong id="best">0 m</strong></div>
+        </div>
+
+        <div class="divider"></div>
+        <h3>Daily record</h3>
+        <div class="calendar-head"><span id="today"></span><span id="dailyCount">0 / 500 coins</span></div>
+        <div class="calendar-list" id="calendar"></div>
+
+      </aside>
+
+      <section class="stage-column">
+        <div class="game-wrap">
+          <canvas id="game" aria-label="3D-style endless runner game"></canvas>
+
+          <div class="hud">
+            <div class="hud-box">DISTANCE <strong id="distance">0 m</strong></div>
+            <div class="hud-box hud-coins">
+              <div><span>RUN COINS</span><strong id="runCoins">0.00</strong></div>
+              <div class="hud-total"><span>ACCUMULATED</span><strong id="totalCoins">0.00</strong></div>
+            </div>
+          </div>
+
+          <div class="overlay" id="overlay" aria-live="polite">
+            <div class="overlay-card">
+              <h2 id="overlayTitle">Ready to run?</h2>
+              <p id="overlayText">Dodge traffic, jump barriers, slide under gates, and dash through hazards. Use ← → to move, Space to jump, ↓ to slide, and Shift to dash.</p>
+              <button class="overlay-close" id="closeOverlayBtn" type="button" aria-label="Close message" title="Close">×</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="game-controls">
+          <button class="button primary" id="startBtn">Start game</button>
+          <div class="touch-controls">
+            <button class="button" data-move="left" aria-label="Move left">←</button>
+            <button class="button" data-move="jump" aria-label="Jump">↑</button>
+            <button class="button" data-move="slide" aria-label="Slide">↓</button>
+            <button class="button" data-move="dash" aria-label="Dash">⚡</button>
+            <button class="button" data-move="right" aria-label="Move right">→</button>
+          </div>
+          <span class="small-note">← → / A D move · Space jump · ↓ / S slide · Shift dash · P pause · Swipe on touch screens</span>
+          <button class="button" id="pauseBtn" disabled>Pause</button>
+        </div>
+
+        <section class="runner-tools" aria-label="Coin transfer and referrals">
+          <div class="runner-tool">
+            <h2>Gentleman Treasury</h2>
+            <p class="small-note">Open the Gentleman Treasury platform. Your runner balance stays saved here; the Treasury needs an authenticated transfer connection before coins can be deposited.</p>
+            <button class="button" id="transferBtn" type="button">Open Gentleman Treasury</button>
+            <p class="notice" id="leftNotice" aria-live="polite"></p>
+          </div>
+          <div class="runner-tool">
+            <h2>Refer a friend</h2>
+            <p class="small-note">Earn 50 coins for each completed referral after it is verified. This local build needs a public web address and a referral-verification service before links can be shared and rewards credited.</p>
+            <input class="referral-link" id="referralLink" type="text" readonly aria-label="Your referral link">
+            <button class="button" id="copyReferralBtn" type="button">Copy referral link</button>
+            <p class="notice" id="referralNotice" aria-live="polite"></p>
+          </div>
+        </section>
+
+        <details class="runner-workshop">
+          <summary>Character selection &amp; customization</summary>
+          <div class="workshop-content">
+            <section>
+              <h2>Customize your runner</h2>
+              <p class="small-note">Appearance is saved separately for each gender.</p>
+              <div class="field">
+                <label for="avatarType">CHARACTER GENDER</label>
+                <select id="avatarType">
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="skinTone">SKIN TONE</label>
+                <select id="skinTone"></select>
+              </div>
+              <div class="field">
+                <label for="outfit">CLOTHING</label>
+                <select id="outfit"></select>
+              </div>
+              <div class="field">
+                <label for="hairstyle">HAIRSTYLE</label>
+                <select id="hairstyle"></select>
+              </div>
+            </section>
+            <section>
+              <h2>Runner collection <span class="small-note workshop-balance">Coins: <strong id="workshopCoins">0</strong></span></h2>
+              <p class="small-note">Each pickup adds 0.01 coin to your balance. Earn up to 500 coins per day across all runners. Unlock runners with coins collected in-game.</p>
+              <div class="character-list" id="characterList"></div>
+              <p class="notice" id="characterNotice" aria-live="polite"></p>
+            </section>
+          </div>
+        </details>
+      </section>
+
+      <aside class="panel right-panel">
+        <section>
+          <h2>Power-ups</h2>
+          <p class="small-note">One free use of each per browser profile.</p>
+          <div class="power-list" id="powerList"></div>
+          <p class="small-note">Additional items require verified tasks. Social verification is not implemented in this demo.</p>
+        </section>
+
+        <div class="divider"></div>
+
+        <section>
+          <h2>Unlock runners</h2>
+          <p class="small-note">Special runners have unique abilities and higher demo coin limits.</p>
+          <div class="character-list" id="characterListLegacy"></div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section>
+          <h2>Community tasks</h2>
+          <p class="small-note">Open an official page. This demo cannot verify likes, follows, comments, or subscriptions.</p>
+          <div class="task-list" id="taskList"></div>
+          <p class="notice" id="taskNotice" aria-live="polite"></p>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+
+    const $ = id => document.getElementById(id);
+    const SAVE_KEY = "gentlemanHuntDemoV1";
+    const DAILY_COIN_LIMIT = 500;
+    const COIN_PER_PICKUP = 0.01;
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const skins = ["#f2d0b2", "#dfb18e", "#c78e69", "#a96f50", "#80523e", "#613e31", "#38251f"];
+    const clothingStyles = {
+      male: [
+        ["classic", "Classic suit", 0x26343a],
+        ["midnight", "Midnight suit", 0x171b22],
+        ["ivory", "Ivory tailoring", 0xd8d6cb],
+        ["sport", "Runner's set", 0x465f57],
+        ["heritage", "Heritage coat", 0x60483b]
+      ],
+      female: [
+        ["sport", "Athletic set", 0x465f57],
+        ["classic", "Classic blazer", 0x26343a],
+        ["midnight", "Midnight suit", 0x171b22],
+        ["ivory", "Ivory outfit", 0xd8d6cb],
+        ["heritage", "Long coat", 0x60483b],
+        ["dress", "Tailored dress", 0x303c42]
+      ]
+    };
+    const hairstyles = {
+      male: [["short", "Short"], ["swept", "Swept back"], ["curly", "Curly"], ["buzz", "Buzz cut"]],
+      female: [["bob", "Bob"], ["long", "Long"], ["bun", "Bun"], ["curly", "Curly"]]
+    };
+    const powersInfo = {
+      shield: { label: "Shield", detail: "Block one collision" },
+      magnet: { label: "Magnet", detail: "Attract nearby coins" },
+      double: { label: "Coin boost", detail: "Double coins briefly" }
+    };
+    const socialTasks = [
+      ["Instagram · Artheist Labs", "https://www.instagram.com/artheist.labs/"],
+      ["X · Artheist Labs", "https://x.com/Artheist_Labs"],
+      ["X · Arrys NFT", "https://x.com/ArrysNFT"],
+      ["Instagram · Arrys Art", "https://www.instagram.com/arrys.art/"],
+      ["YouTube · Artheist", "https://www.youtube.com/channel/UCFZ8OaqXYgY0ZR2oUxnXyQg"]
+    ];
+
+    function freshSave() {
+      return {
+        coins: 0, butler: 0, date: todayKey, todayCoins: 0, days: {},
+        coinScaleVersion: 2,
+        referralCode: "",
+        inventory: { shield: 1, magnet: 1, double: 1 },
+        usedPowers: { shield: false, magnet: false, double: false },
+        unlocked: [0], selectedCharacter: 0, best: 0,
+        avatarGender: "male",
+        appearance: {
+          male: { skinTone: 0, outfit: "classic", hairstyle: "short" },
+          female: { skinTone: 0, outfit: "sport", hairstyle: "bob" }
+        }
+      };
+    }
+
+    const toCoinUnits = amount => Math.round((Number(amount) || 0) * 100);
+    const fromCoinUnits = units => units / 100;
+    const formatCoins = amount => (Number(amount) || 0).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    let save;
+    try {
+      const storedSave = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}");
+      save = { ...freshSave(), ...storedSave };
+      save.inventory = { ...freshSave().inventory, ...(save.inventory || {}) };
+      save.usedPowers = { ...freshSave().usedPowers, ...(save.usedPowers || {}) };
+      save.unlocked = Array.isArray(save.unlocked) ? save.unlocked : [0];
+      save.selectedCharacter = Number(save.selectedCharacter) || 0;
+      save.days = save.days || {};
+      save.referralCode = typeof save.referralCode === "string" ? save.referralCode : "";
+      if (storedSave.coinScaleVersion !== 2) {
+        const convertLegacyBalance = amount => fromCoinUnits(Math.round(Number(amount) || 0));
+        save.coins = convertLegacyBalance(save.coins);
+        save.butler = convertLegacyBalance(save.butler);
+        save.todayCoins = convertLegacyBalance(save.todayCoins);
+        save.days = Object.fromEntries(Object.entries(save.days)
+          .map(([date, amount]) => [date, convertLegacyBalance(amount)]));
+        save.coinScaleVersion = 2;
+      }
+    } catch { save = freshSave(); }
+    if (!save.referralCode) {
+      save.referralCode = `GH-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
+    }
+    const defaultSave = freshSave();
+    save.avatarGender = save.avatarGender === "female" ? "female" : "male";
+    save.appearance = save.appearance || {};
+    for (const gender of ["male", "female"]) {
+      save.appearance[gender] = { ...defaultSave.appearance[gender], ...(save.appearance[gender] || {}) };
+      const validOutfits = clothingStyles[gender].map(style => style[0]);
+      const validHair = hairstyles[gender].map(style => style[0]);
+      if (!validOutfits.includes(save.appearance[gender].outfit)) {
+        save.appearance[gender].outfit = defaultSave.appearance[gender].outfit;
+      }
+      if (!validHair.includes(save.appearance[gender].hairstyle)) {
+        save.appearance[gender].hairstyle = defaultSave.appearance[gender].hairstyle;
+      }
+      save.appearance[gender].skinTone = Math.min(skins.length - 1,
+        Math.max(0, Number(save.appearance[gender].skinTone) || 0));
+    }
+    $("avatarType").value = save.avatarGender;
+
+    if (save.date !== todayKey) {
+      save.date = todayKey;
+      save.todayCoins = 0;
+      save.usedPowers = { shield: false, magnet: false, double: false };
+      save.inventory = { shield: 1, magnet: 1, double: 1 };
+    }
+    save.todayCoins = Math.min(DAILY_COIN_LIMIT, Math.max(0, Number(save.todayCoins) || 0));
+
+    const specialCharacters = [
+      { id: 1, name: "Quickstep", cost: 1.50, ability: "Swift lanes", detail: "Changes lanes 45% faster.", effect: "lane" },
+      { id: 2, name: "Coinkeeper", cost: 2.50, ability: "Coin bonus", detail: "Earns double coins.", effect: "coins" },
+      { id: 3, name: "Skybound", cost: 3.75, ability: "High jump", detail: "Jumps higher to clear hazards.", effect: "jump" },
+      { id: 4, name: "Lowrider", cost: 5.00, ability: "Long slide", detail: "Slides for longer under gates.", effect: "slide" },
+      { id: 5, name: "Flash", cost: 6.50, ability: "Quick dash", detail: "Longer dash with a shorter cooldown.", effect: "dash" },
+      { id: 6, name: "Guardian", cost: 8.00, ability: "Starter shield", detail: "Begins every run with a 10-second shield.", effect: "shield" },
+      { id: 7, name: "Trailblazer", cost: 9.75, ability: "Coin magnet", detail: "Attracts coins from farther away.", effect: "magnet" },
+      { id: 8, name: "Second Wind", cost: 11.50, ability: "One extra chance", detail: "Survives one collision per run.", effect: "revive" },
+      { id: 9, name: "Timekeeper", cost: 13.50, ability: "Slow traffic", detail: "Obstacles approach 15% more slowly.", effect: "slow" },
+      { id: 10, name: "Champion", cost: 16.00, ability: "All-rounder", detail: "Earns double coins and starts shielded.", effect: "champion" }
+    ];
+    save.unlocked = [...new Set([0, ...save.unlocked.filter(id =>
+      id === 0 || specialCharacters.some(character => character.id === id)
+    )])];
+    if (save.selectedCharacter !== 0 && !save.unlocked.includes(save.selectedCharacter)) {
+      save.selectedCharacter = 0;
+    }
+    const activeCharacter = () => specialCharacters.find(c => c.id === save.selectedCharacter);
+    const activeAbility = () => activeCharacter()?.effect;
+    const currentAppearance = () => save.appearance[save.avatarGender];
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x111817);
+    scene.fog = new THREE.Fog(0x111817, 26, 105);
+
+    const camera = new THREE.PerspectiveCamera(53, 1, 0.1, 160);
+    camera.position.set(0, 3.5, 8.5);
+    camera.lookAt(0, 1.05, -5);
+
+    const renderer = new THREE.WebGLRenderer({ canvas: $("game"), antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    scene.add(new THREE.HemisphereLight(0xdde6df, 0x282722, 2.1));
+    const keyLight = new THREE.DirectionalLight(0xfff3df, 3);
+    keyLight.position.set(-5, 12, 7);
+    keyLight.castShadow = true;
+    scene.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0xb8d5d0, 1.4);
+    fillLight.position.set(5, 6, -9);
+    scene.add(fillLight);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(180, 150),
+      new THREE.MeshStandardMaterial({ color: 0x202724, roughness: 1 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.set(0, -0.08, -45);
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const road = new THREE.Mesh(
+      new THREE.PlaneGeometry(9.2, 145),
+      new THREE.MeshStandardMaterial({ color: 0x343937, roughness: .95 })
+    );
+    road.rotation.x = -Math.PI / 2;
+    road.position.set(0, -0.045, -48);
+    road.receiveShadow = true;
+    scene.add(road);
+
+    const laneMarkers = [];
+    for (let z = 10; z > -115; z -= 8) {
+      for (const x of [-1.53, 1.53]) {
+        const marker = new THREE.Mesh(
+          new THREE.BoxGeometry(.035, .012, 3.2),
+          new THREE.MeshStandardMaterial({ color: 0xb9b9aa, roughness: 1 })
+        );
+        marker.position.set(x, -.015, z);
+        scene.add(marker);
+        laneMarkers.push(marker);
+      }
+    }
+
+    const scenery = [];
+    const walkers = [];
+    const sceneryMaterials = {
+      pavement: new THREE.MeshStandardMaterial({ color: 0x555956, roughness: 1 }),
+      curb: new THREE.MeshStandardMaterial({ color: 0xb5b2a5, roughness: 1 }),
+      lamp: new THREE.MeshStandardMaterial({ color: 0x343b39, roughness: .8 }),
+      glow: new THREE.MeshStandardMaterial({ color: 0xf2dc9e, emissive: 0x79602b, roughness: .4 }),
+      window: new THREE.MeshStandardMaterial({ color: 0x83a7a5, emissive: 0x263c3a, roughness: .35 }),
+      litWindow: new THREE.MeshStandardMaterial({ color: 0xd9c89a, emissive: 0x79602b, roughness: .5 }),
+      skin: new THREE.MeshStandardMaterial({ color: 0xc88e69, roughness: .8 }),
+      pedestrianClothes: [
+        new THREE.MeshStandardMaterial({ color: 0x7b5547, roughness: .9 }),
+        new THREE.MeshStandardMaterial({ color: 0x536c65, roughness: .9 }),
+        new THREE.MeshStandardMaterial({ color: 0x77717f, roughness: .9 })
+      ],
+      pedestrianDark: new THREE.MeshStandardMaterial({ color: 0x272827, roughness: .9 })
+    };
+
+    function sceneryMesh(parent, geometry, material, position) {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(...position);
+      mesh.castShadow = false;
+      mesh.receiveShadow = false;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    for (const side of [-1, 1]) {
+      const sidewalk = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.3, 145),
+        sceneryMaterials.pavement
+      );
+      sidewalk.rotation.x = -Math.PI / 2;
+      sidewalk.position.set(side * 5.75, -.035, -48);
+      scene.add(sidewalk);
+
+      const curb = new THREE.Mesh(
+        new THREE.BoxGeometry(.16, .18, 145),
+        sceneryMaterials.curb
+      );
+      curb.position.set(side * 4.67, .02, -48);
+      scene.add(curb);
+
+      for (let index = 0, z = 8; z > -140; index++, z -= 24) {
+        const lamp = new THREE.Group();
+        lamp.position.set(side * 5.15, 0, z);
+        sceneryMesh(lamp, new THREE.CylinderGeometry(.075, .11, 4.7, 8), sceneryMaterials.lamp, [0, 2.35, 0]);
+        sceneryMesh(lamp, new THREE.BoxGeometry(.9, .075, .075), sceneryMaterials.lamp, [-side * .4, 4.62, 0]);
+        sceneryMesh(lamp, new THREE.BoxGeometry(.34, .16, .24), sceneryMaterials.glow, [-side * .8, 4.54, 0]);
+        scene.add(lamp);
+        scenery.push(lamp);
+      }
+
+      for (let index = 0, z = 12; z > -145; index++, z -= 24) {
+        const height = 7 + (index % 3) * 2;
+        const building = new THREE.Group();
+        building.position.set(side * (10.2 + (index % 2) * 1.2), 0, z);
+        const facade = new THREE.MeshStandardMaterial({
+          color: [0x555b57, 0x655d52, 0x4c5655][index % 3],
+          roughness: .95
+        });
+        sceneryMesh(building, new THREE.BoxGeometry(5.4, height, 5.8), facade, [0, height / 2, 0]);
+        sceneryMesh(building, new THREE.BoxGeometry(5.5, .18, 5.9), sceneryMaterials.lamp, [0, height, 0]);
+        const floors = Math.floor((height - 2) / 2);
+        for (let floor = 0; floor < floors; floor++) {
+          for (const windowX of [-1.45, 1.45]) {
+            const windowMat = (index + floor + (windowX > 0 ? 1 : 0)) % 4 === 0
+              ? sceneryMaterials.litWindow : sceneryMaterials.window;
+            sceneryMesh(building, new THREE.BoxGeometry(.9, 1.05, .07), windowMat, [
+              windowX, 1.5 + floor * 1.75, 2.94
+            ]);
+          }
+        }
+        sceneryMesh(building, new THREE.BoxGeometry(1.25, 1.7, .08), sceneryMaterials.lamp, [0, .88, 2.95]);
+        scene.add(building);
+        scenery.push(building);
+      }
+
+      for (let index = 0, z = 2; z > -125; index++, z -= 42) {
+        const pedestrian = new THREE.Group();
+        pedestrian.position.set(side * (5.9 + (index % 2) * .35), 0, z);
+        pedestrian.rotation.y = side < 0 ? Math.PI : 0;
+        const clothes = sceneryMaterials.pedestrianClothes[(index + (side > 0 ? 1 : 0)) % sceneryMaterials.pedestrianClothes.length];
+        sceneryMesh(pedestrian, new THREE.BoxGeometry(.4, .57, .23), clothes, [0, 1.03, 0]);
+        sceneryMesh(pedestrian, new THREE.SphereGeometry(.17, 10, 8), sceneryMaterials.skin, [0, 1.48, 0]);
+        const arms = [];
+        for (const armSide of [-1, 1]) {
+          const arm = new THREE.Group();
+          arm.position.set(armSide * .25, 1.22, 0);
+          sceneryMesh(arm, new THREE.CapsuleGeometry(.065, .39, 3, 6), clothes, [0, -.22, 0]);
+          pedestrian.add(arm);
+          arms.push(arm);
+        }
+        const legs = [];
+        for (const legSide of [-1, 1]) {
+          const leg = new THREE.Group();
+          leg.position.set(legSide * .12, .75, 0);
+          sceneryMesh(leg, new THREE.CapsuleGeometry(.075, .38, 3, 6), sceneryMaterials.pedestrianDark, [0, -.22, 0]);
+          pedestrian.add(leg);
+          legs.push(leg);
+        }
+        pedestrian.userData = { arms, legs, phase: index * 1.7 + side };
+        scene.add(pedestrian);
+        scenery.push(pedestrian);
+        walkers.push(pedestrian);
+      }
+    }
+
+    function makeAvatar() {
+      const group = new THREE.Group();
+      const animated = new THREE.Group();
+      group.add(animated);
+      const appearance = currentAppearance();
+      const skinMaterial = new THREE.MeshStandardMaterial({ color: skins[appearance.skinTone], roughness: .72 });
+      const outfitColor = clothingStyles[save.avatarGender].find(style => style[0] === appearance.outfit)?.[2] || 0x26343a;
+      const clothMaterial = new THREE.MeshStandardMaterial({ color: outfitColor, roughness: .8 });
+      const darkMaterial = new THREE.MeshStandardMaterial({ color: 0x161717, roughness: .85 });
+      const accentMaterial = new THREE.MeshStandardMaterial({
+        color: 0xc81e32, roughness: .72, metalness: .08
+      });
+      const hairColor = new THREE.MeshStandardMaterial({ color: 0x181615, roughness: .9 });
+
+      const sphere = (parent, mat, scale, pos) => {
+        const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 16), mat);
+        mesh.scale.set(...scale); mesh.position.set(...pos); mesh.castShadow = true; parent.add(mesh);
+        return mesh;
+      };
+      const capsule = (parent, mat, radius, length, pos) => {
+        const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(radius, length, 5, 10), mat);
+        mesh.position.set(...pos); mesh.castShadow = true; parent.add(mesh);
+        return mesh;
+      };
+
+      const female = $("avatarType").value === "female";
+      if (female) animated.scale.y = .88;
+      const torso = sphere(animated, clothMaterial, female ? [.29,.45,.2] : [.37,.48,.22], [0,1.12,0]);
+      sphere(animated, clothMaterial, female ? [.34,.2,.22] : [.34,.2,.23], [0,.76,0]);
+      if (female && appearance.outfit === "dress") {
+        const skirt = new THREE.Mesh(
+          new THREE.LatheGeometry([
+            new THREE.Vector2(.34,0),
+            new THREE.Vector2(.32,.12),
+            new THREE.Vector2(.25,.42),
+            new THREE.Vector2(.19,.7),
+            new THREE.Vector2(.16,.78)
+          ],24),
+          clothMaterial
+        );
+        skirt.position.y = .65;
+        skirt.castShadow = true;
+        animated.add(skirt);
+        const hem = new THREE.Mesh(new THREE.TorusGeometry(.34,.012,8,28), darkMaterial);
+        hem.rotation.x = Math.PI / 2;
+        hem.position.y = .66;
+        animated.add(hem);
+      }
+      const head = new THREE.Group();
+      head.position.set(0,1.83,0);
+      animated.add(head);
+      sphere(head, skinMaterial, [.22,.27,.21], [0,0,0]);
+      const style = appearance.hairstyle;
+      const hairScale = style === "buzz" ? [.2,.06,.19] : style === "long" ? [.22,.19,.2] : [.22,.12,.2];
+      const hair = sphere(head, hairColor, hairScale, [0,.16,-.08]);
+      hair.name = "hair";
+      if (female && ["bob", "long"].includes(style)) {
+        const length = style === "long" ? .34 : .18;
+        for (const side of [-1,1]) {
+          capsule(head, hairColor, .065, length, [side*.17,-.17,-.015]);
+        }
+      }
+      if (female && style === "bun") {
+        sphere(head, hairColor, [.12,.12,.12], [0,.18,-.2]);
+      }
+
+      const hatBrim = new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.075,24), darkMaterial);
+      hatBrim.position.set(0,2.08,0);
+      hatBrim.castShadow = true;
+      animated.add(hatBrim);
+      const hatCrown = new THREE.Mesh(new THREE.CylinderGeometry(.21,.23,.42,20), darkMaterial);
+      hatCrown.position.set(0,2.31,0);
+      hatCrown.castShadow = true;
+      animated.add(hatCrown);
+      const hatBand = new THREE.Mesh(new THREE.CylinderGeometry(.232,.232,.065,20), darkMaterial);
+      hatBand.position.set(0,2.22,0);
+      animated.add(hatBand);
+
+      sphere(head, skinMaterial, [.045,.055,.045], [0,0,.205]);
+      for (const side of [-1,1]) {
+        sphere(head, skinMaterial, [.045,.075,.045], [side*.205,-.015,0]);
+        sphere(head, darkMaterial, [.018,.021,.012], [side*.085,.045,.19]);
+      }
+      const nose = sphere(head, skinMaterial, [.035,.04,.045], [0,-.005,.23]);
+      nose.name = "nose";
+      if (!female) {
+        const mustache = sphere(head, darkMaterial, [.065,.022,.022], [0,-.065,.214]);
+        for (const side of [-1,1]) {
+          const curl = sphere(head, darkMaterial, [.032,.026,.022], [side*.055,-.058,.214]);
+          curl.rotation.z = side * -.2;
+        }
+        mustache.name = "mustache";
+      }
+
+      const shirt = sphere(animated, darkMaterial, [.105,.28,.035], [0,1.12,.205]);
+      shirt.name = "shirt";
+      const tie = new THREE.Mesh(new THREE.ConeGeometry(.07,.31,4), darkMaterial);
+      tie.position.set(0,1.1,.245);
+      tie.rotation.x = Math.PI;
+      animated.add(tie);
+      for (const y of [1.22,1.06,.9]) {
+        sphere(animated, darkMaterial, [.018,.018,.012], [0,y,.225]);
+      }
+
+      const leftArm = new THREE.Group();
+      const rightArm = new THREE.Group();
+      const shoulderWidth = female ? .31 : .39;
+      leftArm.position.set(-shoulderWidth,1.42,0); rightArm.position.set(shoulderWidth,1.42,0);
+      animated.add(leftArm, rightArm);
+      const armRadius = female ? .09 : .105;
+      capsule(leftArm, clothMaterial, armRadius,.36,[0,-.25,0]);
+      capsule(rightArm, clothMaterial, armRadius,.36,[0,-.25,0]);
+      sphere(leftArm, skinMaterial, [.09,.1,.09],[0,-.49,.01]);
+      sphere(rightArm, skinMaterial, [.09,.1,.09],[0,-.49,.01]);
+
+      if (female) {
+        const umbrella = new THREE.Group();
+        umbrella.position.set(0,-.53,.12);
+        leftArm.add(umbrella);
+        const shaftMaterial = new THREE.MeshStandardMaterial({
+          color: 0x8b7956, roughness: .42, metalness: .45
+        });
+        const canopyMaterial = new THREE.MeshStandardMaterial({
+          color: 0x303947, roughness: .72, side: THREE.DoubleSide
+        });
+        const shaft = new THREE.Mesh(new THREE.CylinderGeometry(.014,.019,.95,10), shaftMaterial);
+        shaft.position.y = .48;
+        umbrella.add(shaft);
+        const canopy = new THREE.Mesh(
+          new THREE.SphereGeometry(.42,24,12,0,Math.PI*2,0,Math.PI/2),
+          canopyMaterial
+        );
+        canopy.position.y = .95;
+        canopy.scale.y = .55;
+        canopy.castShadow = true;
+        umbrella.add(canopy);
+        const ribMaterial = new THREE.LineBasicMaterial({ color: 0x89909a });
+        for (let spoke = 0; spoke < 8; spoke++) {
+          const angle = spoke * Math.PI / 4;
+          const rib = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(0,1.18,0),
+            new THREE.Vector3(Math.cos(angle)*.42,.95,Math.sin(angle)*.42)
+          ]);
+          umbrella.add(new THREE.Line(rib,ribMaterial));
+        }
+        const ferrule = new THREE.Mesh(new THREE.SphereGeometry(.035,10,8), shaftMaterial);
+        ferrule.position.y = 1.18;
+        umbrella.add(ferrule);
+        const hook = new THREE.Mesh(new THREE.TorusGeometry(.065,.014,8,14,Math.PI), shaftMaterial);
+        hook.position.y = .07;
+        hook.rotation.z = Math.PI;
+        umbrella.add(hook);
+        for (const x of [-.045,0,.045]) {
+          const finger = capsule(leftArm, skinMaterial, .022,.045,[x,-.51,.075]);
+          finger.rotation.z = Math.PI / 2;
+        }
+        const thumb = capsule(leftArm, skinMaterial, .025,.055,[.09,-.48,.09]);
+        thumb.rotation.z = -.7;
+      } else {
+        const briefcase = new THREE.Group();
+        briefcase.position.set(-.08,-.69,-.015);
+        leftArm.add(briefcase);
+        const leatherMaterial = new THREE.MeshStandardMaterial({
+          color: 0x30231f, roughness: .56, metalness: .08
+        });
+        const trimMaterial = new THREE.MeshStandardMaterial({
+          color: 0x92764e, roughness: .4, metalness: .58
+        });
+        const caseBody = new THREE.Mesh(new THREE.BoxGeometry(.42,.38,.17), leatherMaterial);
+        caseBody.castShadow = true;
+        briefcase.add(caseBody);
+        const caseFront = new THREE.Mesh(new THREE.BoxGeometry(.36,.32,.012), leatherMaterial);
+        caseFront.position.z = -.091;
+        briefcase.add(caseFront);
+        const caseSeam = new THREE.Mesh(new THREE.BoxGeometry(.38,.012,.012), trimMaterial);
+        caseSeam.position.set(0,.12,-.101);
+        briefcase.add(caseSeam);
+        const caseHandle = new THREE.Mesh(new THREE.BoxGeometry(.2,.035,.07), leatherMaterial);
+        caseHandle.position.set(.08,.2,0);
+        caseHandle.castShadow = true;
+        briefcase.add(caseHandle);
+        const handleSupport = new THREE.Mesh(new THREE.BoxGeometry(.035,.09,.065), trimMaterial);
+        for (const x of [0,.16]) {
+          const support = handleSupport.clone();
+          support.position.set(x,.145,0);
+          briefcase.add(support);
+        }
+        const clasp = new THREE.Mesh(new THREE.BoxGeometry(.07,.085,.025), trimMaterial);
+        clasp.position.set(0,.085,-.104);
+        briefcase.add(clasp);
+        const caseBadge = new THREE.Mesh(new THREE.CircleGeometry(.045,20), accentMaterial);
+        caseBadge.position.set(0,-.02,-.103);
+        caseBadge.rotation.y = Math.PI;
+        briefcase.add(caseBadge);
+        for (const x of [-.16,.16]) {
+          const rivet = new THREE.Mesh(new THREE.SphereGeometry(.018,10,8), trimMaterial);
+          rivet.position.set(x,-.14,-.102);
+          briefcase.add(rivet);
+        }
+        for (const x of [-.045,0,.045]) {
+          const finger = capsule(leftArm, skinMaterial, .022,.045,[x,-.51,.075]);
+          finger.rotation.z = Math.PI / 2;
+        }
+        const thumb = capsule(leftArm, skinMaterial, .025,.055,[.09,-.48,.09]);
+        thumb.rotation.z = -.7;
+      }
+
+      const legs = [];
+      for (const x of [-.18,.18]) {
+        const leg = new THREE.Group();
+        leg.position.set(female ? x * 1.2 : x,.72,0);
+        animated.add(leg);
+        capsule(leg, darkMaterial, .12,.38,[0,-.25,0]);
+        const boot = new THREE.Mesh(
+          new THREE.BoxGeometry(.2,.13,.34),
+          darkMaterial
+        );
+        boot.position.set(0,-.48,.055);
+        boot.castShadow = true;
+        leg.add(boot);
+        const shoe = new THREE.Mesh(
+          new THREE.BoxGeometry(.19,.11,.32),
+          darkMaterial
+        );
+        shoe.position.set(0,-.52,.07); shoe.castShadow = true; leg.add(shoe);
+        legs.push(leg);
+      }
+
+      group.userData = {
+        animated, torso, head, hair, skinMaterial, clothMaterial, leftArm, rightArm, legs, female
+      };
+      group.position.set(0,0,0);
+      group.rotation.y = Math.PI;
+      group.traverse(obj => { if (obj.isMesh) { obj.castShadow = true; obj.receiveShadow = true; } });
+      return group;
+    }
+
+    let avatar = makeAvatar();
+    scene.add(avatar);
+
+    function updateAvatarStyle() {
+      const data = avatar.userData;
+      const appearance = currentAppearance();
+      data.skinMaterial.color.set(skins[appearance.skinTone]);
+      data.clothMaterial.color.setHex(
+        clothingStyles[save.avatarGender].find(style => style[0] === appearance.outfit)?.[2] || 0x26343a
+      );
+      const female = $("avatarType").value === "female";
+      data.torso.scale.x = female ? .29 : .37;
+      data.legs.forEach(leg => {
+        leg.position.x = female
+          ? (leg.position.x < 0 ? -.216 : .216)
+          : (leg.position.x < 0 ? -.18 : .18);
+      });
+    }
+
+    const objects = [];
+    const laneX = [-2.5, 0, 2.5];
+    let lane = 1, running = false, paused = false, gameOver = false;
+    let elapsed = 0, spawnTimer = 0, distance = 0, runCoins = 0;
+    let jumpTime = 0, slideTime = 0, dashTime = 0, dashCooldown = 0, reviveUsed = false;
+    let shieldTime = 0, magnetTime = 0, boostTime = 0;
+    const clock = new THREE.Clock();
+
+    function spawnItem(type, laneIndex, z = -75) {
+      let mesh;
+      if (type === "coin") {
+        mesh = new THREE.Mesh(
+          new THREE.CylinderGeometry(.34,.34,.09,24),
+          new THREE.MeshStandardMaterial({ color: 0xe2d09d, metalness: .72, roughness: .27, emissive: 0x392b0b })
+        );
+        mesh.rotation.x = Math.PI / 2;
+        mesh.position.y = 1.15;
+      } else {
+        mesh = new THREE.Group();
+        const addPart = (geometry, material, x, y, partZ) => {
+          const part = new THREE.Mesh(geometry, material);
+          part.position.set(x, y, partZ);
+          part.castShadow = true;
+          mesh.add(part);
+          return part;
+        };
+        const orange = new THREE.MeshStandardMaterial({ color: 0xe17c3b, roughness: .8 });
+        const white = new THREE.MeshStandardMaterial({ color: 0xe5dfca, roughness: .8 });
+        const dark = new THREE.MeshStandardMaterial({ color: 0x414846, roughness: .9 });
+        const body = new THREE.MeshStandardMaterial({ color: 0x58615c, roughness: .85 });
+        if (type === "barrier") {
+          addPart(new THREE.BoxGeometry(1.25, .72, .8), dark, 0, .36, 0);
+          addPart(new THREE.BoxGeometry(1.27, .15, .82), white, 0, .48, .01);
+          addPart(new THREE.BoxGeometry(.18, .22, .84), orange, -.38, .48, .02);
+          addPart(new THREE.BoxGeometry(.18, .22, .84), orange, .38, .48, .02);
+        } else if (type === "crate") {
+          const crate = new THREE.MeshStandardMaterial({ color: 0x79563c, roughness: .9 });
+          addPart(new THREE.BoxGeometry(1.2, 1.45, 1), crate, 0, .73, 0);
+          addPart(new THREE.BoxGeometry(1.23, .12, 1.03), white, 0, .72, .01);
+          addPart(new THREE.BoxGeometry(.12, 1.48, 1.03), dark, 0, .73, .01);
+        } else if (type === "cone") {
+          addPart(new THREE.CylinderGeometry(.34, .38, .13, 12), dark, 0, .065, 0);
+          addPart(new THREE.CylinderGeometry(.055, .27, .8, 12), orange, 0, .52, 0);
+          addPart(new THREE.CylinderGeometry(.16, .2, .11, 12), white, 0, .5, 0);
+        } else if (type === "gate") {
+          for (const side of [-1, 1]) {
+            addPart(new THREE.BoxGeometry(.16, 1.75, .18), orange, side * .72, .875, 0);
+            addPart(new THREE.BoxGeometry(.23, .12, .25), dark, side * .72, .06, 0);
+          }
+          addPart(new THREE.BoxGeometry(1.58, .34, .24), white, 0, 1.65, 0);
+          addPart(new THREE.BoxGeometry(1.6, .1, .26), orange, 0, 1.48, 0);
+        } else if (type === "puddle") {
+          addPart(new THREE.CylinderGeometry(.86, .76, .035, 20), new THREE.MeshStandardMaterial({
+            color: 0x547d82, metalness: .25, roughness: .2, transparent: true, opacity: .85
+          }), 0, .025, 0);
+          addPart(new THREE.BoxGeometry(.35, .02, .08), white, -.2, .05, .12);
+        } else if (type === "van") {
+          const van = new THREE.MeshStandardMaterial({ color: 0x63756e, roughness: .7 });
+          const glass = new THREE.MeshStandardMaterial({ color: 0x8eb4b2, metalness: .12, roughness: .3 });
+          addPart(new THREE.BoxGeometry(1.8, 1.3, 1.45), van, 0, .91, 0);
+          addPart(new THREE.BoxGeometry(1.45, .42, .08), glass, 0, 1.25, .76);
+          for (const side of [-1, 1]) {
+            const wheel = addPart(new THREE.CylinderGeometry(.24, .24, .16, 12), dark, side * .83, .34, .42);
+            wheel.rotation.z = Math.PI / 2;
+          }
+        }
+      }
+      mesh.position.x = laneX[laneIndex];
+      mesh.position.z = z;
+      scene.add(mesh);
+      objects.push({ mesh, type, lane: laneIndex, hit: false });
+    }
+
+    function spawnWave() {
+      const obstacleTypes = ["barrier", "crate", "cone", "gate", "puddle", "van"];
+      const obstacleLane = Math.floor(Math.random() * 3);
+      const secondLane = (obstacleLane + 1 + Math.floor(Math.random() * 2)) % 3;
+      const safeLane = 3 - obstacleLane - secondLane;
+      const firstType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+      spawnItem(firstType, obstacleLane);
+      if (Math.random() > .62) {
+        const secondType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+        spawnItem(secondType, secondLane, -79);
+      }
+      for (let n = 0; n < 5; n++) spawnItem("coin", safeLane, -72 - n * 5);
+    }
+
+    function dailyLimit() { return DAILY_COIN_LIMIT; }
+
+    function addCoins(amount) {
+      const remainingUnits = Math.max(0, toCoinUnits(dailyLimit()) - toCoinUnits(save.todayCoins));
+      const earnedUnits = Math.min(remainingUnits, toCoinUnits(amount));
+      if (earnedUnits <= 0) return 0;
+      const earned = fromCoinUnits(earnedUnits);
+      save.coins = fromCoinUnits(toCoinUnits(save.coins) + earnedUnits);
+      save.todayCoins = fromCoinUnits(toCoinUnits(save.todayCoins) + earnedUnits);
+      save.days[todayKey] = fromCoinUnits(toCoinUnits(save.days[todayKey]) + earnedUnits);
+      saveGame();
+      renderStats();
+      return earned;
+    }
+
+    function endRun(message = "Run complete") {
+      running = false; gameOver = true;
+      save.best = Math.max(save.best || 0, Math.floor(distance));
+      saveGame(); renderStats();
+      $("overlayTitle").textContent = message;
+      $("overlayText").textContent = `Distance: ${Math.floor(distance)} m · Coins collected: ${formatCoins(runCoins)}. Start another run when ready.`;
+      $("startBtn").textContent = "Run again";
+      $("startBtn").hidden = false;
+      $("pauseBtn").disabled = true;
+      $("pauseBtn").textContent = "Pause";
+      $("overlay").hidden = false;
+    }
+
+    function beginRun() {
+      objects.splice(0).forEach(o => scene.remove(o.mesh));
+      lane = 1; elapsed = 0; spawnTimer = 1; distance = 0; runCoins = 0; reviveUsed = false;
+      jumpTime = 0; slideTime = 0; dashTime = 0; dashCooldown = 0;
+      shieldTime = 0; magnetTime = 0; boostTime = 0;
+      if (["shield", "champion"].includes(activeAbility())) shieldTime = 10;
+      running = true; paused = false; gameOver = false;
+      avatar.position.set(0, 0, 0);
+      avatar.userData.animated.position.set(0, 0, 0);
+      avatar.userData.animated.scale.set(1, avatar.userData.female ? .88 : 1, 1);
+      avatar.userData.animated.rotation.set(0, 0, 0);
+      $("overlay").hidden = true;
+      $("startBtn").hidden = true;
+      $("pauseBtn").disabled = false;
+      $("pauseBtn").textContent = "Pause";
+      $("runCoins").textContent = formatCoins(0);
+      clock.getDelta();
+    }
+
+    function usePower(name) {
+      if (!running || save.inventory[name] <= 0 || save.usedPowers[name]) return;
+      save.inventory[name]--;
+      save.usedPowers[name] = true;
+      if (name === "shield") shieldTime = 8;
+      if (name === "magnet") magnetTime = 8;
+      if (name === "double") boostTime = 8;
+      saveGame(); renderPowers();
+    }
+
+    function move(action) {
+      if (!running || paused) return;
+      if (action === "left") lane = Math.max(0, lane - 1);
+      if (action === "right") lane = Math.min(2, lane + 1);
+      if (action === "jump" && jumpTime <= 0 && slideTime <= 0) {
+        jumpTime = activeAbility() === "jump" ? .9 : .75;
+      }
+      if (action === "slide" && jumpTime <= 0) {
+        slideTime = activeAbility() === "slide" ? 1.2 : .85;
+      }
+      if (action === "dash" && dashCooldown <= 0) {
+        dashTime = activeAbility() === "dash" ? .95 : .72;
+        dashCooldown = activeAbility() === "dash" ? .7 : 1.35;
+        slideTime = 0;
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), .045);
+
+      if (running && !paused) {
+        elapsed += dt;
+        distance += dt * 8;
+        spawnTimer -= dt;
+        if (spawnTimer <= 0) {
+          spawnWave();
+          spawnTimer = Math.max(.75, 1.55 - elapsed * .004);
+        }
+
+        const laneResponse = activeAbility() === "lane" ? 14.5 : 10;
+        avatar.position.x += (laneX[lane] - avatar.position.x) * Math.min(1, dt * laneResponse);
+        slideTime = Math.max(0, slideTime - dt);
+        dashTime = Math.max(0, dashTime - dt);
+        dashCooldown = Math.max(0, dashCooldown - dt);
+        const sliding = slideTime > 0;
+        const jumpDuration = activeAbility() === "jump" ? .9 : .75;
+        const jumpHeight = activeAbility() === "jump" ? 1.7 : 1.25;
+        avatar.userData.animated.position.y = (jumpTime > 0
+          ? Math.sin((jumpDuration - jumpTime) / jumpDuration * Math.PI) * jumpHeight : 0) - (sliding ? .34 : 0);
+        avatar.userData.animated.scale.y = (sliding ? .72 : 1) * (avatar.userData.female ? .88 : 1);
+        avatar.userData.animated.rotation.x = sliding ? .42 : dashTime > 0 ? .16 : 0;
+        if (jumpTime > 0) jumpTime -= dt;
+
+        const stride = Math.sin(elapsed * 13);
+        avatar.userData.leftArm.rotation.x = sliding ? -1.1 : stride * .65;
+        avatar.userData.rightArm.rotation.x = sliding ? -1.1 : -stride * .65;
+        avatar.userData.legs[0].rotation.x = sliding ? .9 : -stride * .65;
+        avatar.userData.legs[1].rotation.x = sliding ? .9 : stride * .65;
+        shieldTime = Math.max(0, shieldTime - dt);
+        magnetTime = Math.max(0, magnetTime - dt);
+        boostTime = Math.max(0, boostTime - dt);
+
+        const speed = (19 + Math.min(8, elapsed * .12))
+          * (activeAbility() === "slow" ? .85 : 1) * (dashTime > 0 ? 1.55 : 1);
+        for (const marker of laneMarkers) {
+          marker.position.z += speed * dt;
+          if (marker.position.z > 12) marker.position.z -= 128;
+        }
+        for (const prop of scenery) {
+          prop.position.z += speed * dt;
+          if (prop.position.z > 20) prop.position.z -= 168;
+        }
+        for (const pedestrian of walkers) {
+          const gait = Math.sin(elapsed * 5 + pedestrian.userData.phase) * .48;
+          pedestrian.userData.arms[0].rotation.x = gait;
+          pedestrian.userData.arms[1].rotation.x = -gait;
+          pedestrian.userData.legs[0].rotation.x = -gait;
+          pedestrian.userData.legs[1].rotation.x = gait;
+        }
+
+        for (let i = objects.length - 1; i >= 0; i--) {
+          const obj = objects[i];
+          obj.mesh.position.z += speed * dt;
+          if (obj.type === "coin") {
+            obj.mesh.rotation.z += dt * 2.6;
+            const magnetRange = activeAbility() === "magnet" ? 19 : 13;
+            if ((magnetTime > 0 || activeAbility() === "magnet")
+              && Math.abs(obj.mesh.position.z) < magnetRange) {
+              obj.mesh.position.x += (avatar.position.x - obj.mesh.position.x) * dt * 2.5;
+            }
+          }
+
+          const nearPlayer = obj.mesh.position.z > -1.2 && obj.mesh.position.z < 1.1;
+          const sameLane = Math.abs(obj.mesh.position.x - avatar.position.x) < 1.05;
+          if (!obj.hit && nearPlayer && sameLane) {
+            obj.hit = true;
+            if (obj.type === "coin") {
+              const characterBonus = ["coins", "champion"].includes(activeAbility()) ? 2 : 1;
+              const multiplier = characterBonus * (boostTime > 0 ? 2 : 1);
+              const gained = addCoins(COIN_PER_PICKUP * multiplier);
+              runCoins = fromCoinUnits(toCoinUnits(runCoins) + toCoinUnits(gained));
+              $("runCoins").textContent = formatCoins(runCoins);
+              scene.remove(obj.mesh); objects.splice(i,1); continue;
+            }
+            const evaded = dashTime > .05
+              || (obj.type === "gate" ? slideTime > .2 : jumpTime > .22);
+            if (!evaded) {
+              if (shieldTime > 0) {
+                shieldTime = 0;
+              } else if (activeAbility() === "revive" && !reviveUsed) {
+                reviveUsed = true;
+                scene.remove(obj.mesh);
+                objects.splice(i, 1);
+                continue;
+              } else {
+                endRun("Obstacle hit");
+                break;
+              }
+            }
+          }
+          if (obj.mesh.position.z > 12) {
+            scene.remove(obj.mesh); objects.splice(i,1);
+          }
+        }
+        $("distance").textContent = `${Math.floor(distance)} m`;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    function resize() {
+      const rect = $("game").getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      renderer.setSize(rect.width, rect.height, false);
+      camera.aspect = rect.width / rect.height;
+      camera.updateProjectionMatrix();
+    }
+
+    function saveGame() {
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch {}
+    }
+
+    function renderStats() {
+      $("coins").textContent = formatCoins(save.coins);
+      $("workshopCoins").textContent = formatCoins(save.coins);
+      $("totalCoins").textContent = formatCoins(save.coins);
+      document.querySelectorAll("[data-character-id]").forEach(button => {
+        const id = Number(button.dataset.characterId);
+        const character = specialCharacters.find(item => item.id === id);
+        if (character && !save.unlocked.includes(id) && id !== save.selectedCharacter) {
+          button.disabled = save.coins < character.cost;
+        }
+      });
+      $("limit").textContent = dailyLimit().toLocaleString();
+      $("dailyCount").textContent = `${formatCoins(save.todayCoins)} / ${formatCoins(dailyLimit())} coins`;
+      $("best").textContent = `${save.best || 0} m`;
+      $("today").textContent = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date());
+      const entries = Object.entries(save.days).sort((a,b) => b[0].localeCompare(a[0])).slice(0,7);
+      $("calendar").innerHTML = entries.length
+        ? entries.map(([date,count]) => `<div class="calendar-day"><span>${escapeHtml(date)}</span><strong>${formatCoins(count)} coins</strong></div>`).join("")
+        : `<div class="calendar-day"><span>Today</span><strong>No runs yet</strong></div>`;
+    }
+
+    function renderPowers() {
+      $("powerList").innerHTML = Object.entries(powersInfo).map(([key,power]) => `
+        <div class="power-row">
+          <span>${power.label}<small>${power.detail}</small></span>
+          <button class="button" data-power="${key}" ${save.inventory[key] <= 0 || save.usedPowers[key] ? "disabled" : ""}>
+            Use · ${save.inventory[key] || 0}
+          </button>
+        </div>`).join("");
+      document.querySelectorAll("[data-power]").forEach(button =>
+        button.addEventListener("click", () => usePower(button.dataset.power))
+      );
+    }
+
+    function renderCharacters() {
+      const base = `<div class="character ${save.selectedCharacter === 0 ? "selected" : ""}">
+        <span><strong>Everyday Runner</strong><br><small>Balanced abilities · 500 coin daily limit</small></span>
+        <button class="button" data-character-id="0" ${save.selectedCharacter === 0 ? "disabled" : ""}>
+          ${save.selectedCharacter === 0 ? "Selected" : "Select"}
+        </button>
+      </div>`;
+      $("characterList").innerHTML = base + specialCharacters.map(character => {
+        const unlocked = save.unlocked.includes(character.id);
+        return `<div class="character ${save.selectedCharacter === character.id ? "selected" : ""}">
+          <span><strong>${escapeHtml(character.name)}</strong><br>
+            <small>${escapeHtml(character.ability)} — ${escapeHtml(character.detail)}<br>
+            Unlock: ${formatCoins(character.cost)} coins · ${DAILY_COIN_LIMIT} coin daily limit</small>
+          </span>
+          <button class="button" data-character-id="${character.id}"
+            ${save.selectedCharacter === character.id || (!unlocked && save.coins < character.cost) ? "disabled" : ""}>
+            ${unlocked ? (save.selectedCharacter === character.id ? "Selected" : "Select") : `Unlock · ${formatCoins(character.cost)}`}
+          </button>
+        </div>`;
+      }).join("");
+      document.querySelectorAll("[data-character-id]").forEach(button =>
+        button.addEventListener("click", () => selectCharacter(Number(button.dataset.characterId)))
+      );
+    }
+
+    function selectCharacter(id) {
+      if (id !== 0 && !save.unlocked.includes(id)) {
+        unlockCharacter(id);
+        return;
+      }
+      save.selectedCharacter = id;
+      saveGame();
+      renderAll();
+      $("characterNotice").textContent = id === 0
+        ? "Everyday Runner selected."
+        : `${activeCharacter().name} selected. ${activeCharacter().detail}`;
+    }
+
+    function unlockCharacter(id) {
+      const character = specialCharacters.find(c => c.id === id);
+      if (!character) return;
+      if (!save.unlocked.includes(id)) {
+        if (save.coins < character.cost) {
+          $("characterNotice").textContent = `Collect ${character.cost - save.coins} more coins to unlock ${character.name}.`;
+          return;
+        }
+        save.coins -= character.cost;
+        save.unlocked.push(id);
+      }
+      save.selectedCharacter = id;
+      saveGame(); renderAll();
+      $("characterNotice").textContent = `${character.name} unlocked and selected. ${character.detail}`;
+    }
+
+    function renderTasks() {
+      $("taskList").innerHTML = socialTasks.map(([title,url]) => `
+        <div class="task">
+          <a href="${url}" target="_blank" rel="noopener noreferrer">${escapeHtml(title)} ↗</a><br>
+          <button class="button" type="button" data-task="${escapeHtml(title)}">Check task</button>
+        </div>`).join("");
+      document.querySelectorAll("[data-task]").forEach(button =>
+        button.addEventListener("click", () => {
+          $("taskNotice").textContent = "Verification unavailable: connect an authorized backend/API before granting rewards.";
+        })
+      );
+    }
+
+    function renderAll() {
+      renderStats(); renderPowers(); renderCharacters(); renderCustomization(); updateAvatarStyle();
+    }
+
+    function renderCustomization() {
+      const gender = save.avatarGender;
+      $("avatarType").value = gender;
+      $("outfit").replaceChildren();
+      for (const [value, label] of clothingStyles[gender]) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        $("outfit").append(option);
+      }
+      $("hairstyle").replaceChildren();
+      for (const [value, label] of hairstyles[gender]) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        $("hairstyle").append(option);
+      }
+      const appearance = currentAppearance();
+      $("skinTone").value = appearance.skinTone;
+      $("outfit").value = appearance.outfit;
+      $("hairstyle").value = appearance.hairstyle;
+    }
+
+    function saveAppearanceFromControls() {
+      const appearance = currentAppearance();
+      appearance.skinTone = Number($("skinTone").value);
+      appearance.outfit = $("outfit").value;
+      appearance.hairstyle = $("hairstyle").value;
+      saveGame();
+    }
+
+    function rebuildAvatar() {
+      const x = avatar.position.x;
+      scene.remove(avatar);
+      avatar = makeAvatar();
+      avatar.position.x = x;
+      scene.add(avatar);
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[char]));
+    }
+
+    skins.forEach((_, index) => {
+      const option = document.createElement("option");
+      option.value = index;
+      option.textContent = `Skin tone ${index + 1}`;
+      $("skinTone").append(option);
+    });
+
+    $("avatarType").addEventListener("change", () => {
+      saveAppearanceFromControls();
+      save.avatarGender = $("avatarType").value;
+      renderCustomization();
+      rebuildAvatar();
+      saveGame();
+      updateAvatarStyle();
+    });
+    $("skinTone").addEventListener("change", () => {
+      saveAppearanceFromControls();
+      updateAvatarStyle();
+    });
+    $("outfit").addEventListener("change", () => {
+      saveAppearanceFromControls();
+      rebuildAvatar();
+      updateAvatarStyle();
+    });
+    $("hairstyle").addEventListener("change", () => {
+      saveAppearanceFromControls();
+      rebuildAvatar();
+    });
+    $("startBtn").addEventListener("click", beginRun);
+    $("pauseBtn").addEventListener("click", () => {
+      if (!running) return;
+      paused = !paused;
+      $("pauseBtn").textContent = paused ? "Resume" : "Pause";
+      $("overlayTitle").textContent = paused ? "Paused" : "";
+      $("overlayText").textContent = paused ? "Take a breather, then continue your run." : "";
+      $("overlay").hidden = !paused;
+    });
+    $("closeOverlayBtn").addEventListener("click", () => {
+      $("overlay").hidden = true;
+    });
+    $("referralLink").value = (() => {
+      const url = new URL(location.href);
+      url.searchParams.set("ref", save.referralCode);
+      return url.href;
+    })();
+    const incomingReferral = new URLSearchParams(location.search).get("ref");
+    if (incomingReferral && incomingReferral !== save.referralCode) {
+      $("referralNotice").textContent =
+        "Referral link received. This local demo cannot verify a completed referral or issue the 50-coin reward.";
+    }
+    $("copyReferralBtn").addEventListener("click", async () => {
+      const input = $("referralLink");
+      try {
+        await navigator.clipboard.writeText(input.value);
+        $("referralNotice").textContent = "Referral link copied. A verified referral is worth 50 coins.";
+      } catch (error) {
+        input.select();
+        const copied = document.execCommand("copy");
+        if (!copied) {
+          $("referralNotice").textContent = "Could not copy automatically. Select and copy the referral link above.";
+          return;
+        }
+        $("referralNotice").textContent = "Referral link copied. A verified referral is worth 50 coins.";
+      }
+    });
+    $("transferBtn").addEventListener("click", () => {
+      window.open("https://gentlemantre.netlify.app/", "_blank", "noopener,noreferrer");
+      $("leftNotice").textContent =
+        `Opened Gentleman Treasury. Your ${formatCoins(save.coins)} runner coins remain saved here; direct deposit is not connected yet.`;
+    });
+
+    document.querySelectorAll("[data-move]").forEach(button =>
+      button.addEventListener("click", () => move(button.dataset.move))
+    );
+    let touchStart = null;
+    const gameCanvas = $("game");
+    gameCanvas.addEventListener("pointerdown", event => {
+      if (event.pointerType === "mouse" || !event.isPrimary) return;
+      touchStart = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
+      event.preventDefault();
+    });
+    window.addEventListener("pointerup", event => {
+      if (!touchStart || touchStart.pointerId !== event.pointerId) return;
+      const deltaX = event.clientX - touchStart.x;
+      const deltaY = event.clientY - touchStart.y;
+      touchStart = null;
+      const swipeThreshold = 28;
+      if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < swipeThreshold) return;
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        move(deltaX < 0 ? "left" : "right");
+      } else {
+        move(deltaY < 0 ? "jump" : "slide");
+      }
+      event.preventDefault();
+    });
+    window.addEventListener("pointercancel", () => { touchStart = null; });
+    window.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !$("overlay").hidden) {
+        $("overlay").hidden = true;
+        return;
+      }
+      if (["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].includes(event.key)) event.preventDefault();
+      if (event.key === "ArrowLeft" || event.key.toLowerCase() === "a") move("left");
+      if (event.key === "ArrowRight" || event.key.toLowerCase() === "d") move("right");
+      if (event.key === "ArrowUp" || event.key === " ") move("jump");
+      if (event.key === "ArrowDown" || event.key.toLowerCase() === "s") move("slide");
+      if (event.key === "Shift" || event.key.toLowerCase() === "x") move("dash");
+      if (event.key.toLowerCase() === "p" && running) $("pauseBtn").click();
+    });
+    window.addEventListener("resize", resize);
+
+    renderTasks();
+    renderCustomization();
+    renderAll();
+    saveGame();
+    resize();
+    animate();
+  </script>
+</body>
+</html>
