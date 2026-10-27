@@ -901,6 +901,71 @@
     let shieldTime = 0, magnetTime = 0, boostTime = 0;
     const clock = new THREE.Clock();
 
+    // 3D visual effects — camera lean/shake/bob, coin sparkles, dash speed lines
+    let cameraShake = 0;
+    let cameraLean = 0;
+
+    const MAX_PARTICLES = 240;
+    const _pPos = new Float32Array(MAX_PARTICLES * 3);
+    const _pCol = new Float32Array(MAX_PARTICLES * 3);
+    const _pGeo = new THREE.BufferGeometry();
+    _pGeo.setAttribute('position', new THREE.BufferAttribute(_pPos, 3));
+    _pGeo.setAttribute('color', new THREE.BufferAttribute(_pCol, 3));
+    const _pMat = new THREE.PointsMaterial({ size: 0.14, vertexColors: true, transparent: true, depthWrite: false });
+    scene.add(new THREE.Points(_pGeo, _pMat));
+    const _particles = [];
+
+    function spawnCoinParticles(x, y, z) {
+      for (let i = 0; i < 10; i++) {
+        const angle = (i / 10) * Math.PI * 2;
+        const s = 0.7 + Math.random() * 1.1;
+        _particles.push({ x, y, z, vx: Math.cos(angle)*s*.55, vy: 0.6+Math.random()*1.4, vz: Math.sin(angle)*s*.28, life: 0.55+Math.random()*.25, max: 0.8 });
+      }
+    }
+
+    function updateParticles(dt) {
+      for (let i = _particles.length - 1; i >= 0; i--) {
+        const p = _particles[i];
+        p.life -= dt; if (p.life <= 0) { _particles.splice(i, 1); continue; }
+        p.x += p.vx*dt; p.y += p.vy*dt; p.z += p.vz*dt; p.vy -= 3.8*dt;
+      }
+      const n = Math.min(_particles.length, MAX_PARTICLES);
+      for (let i = 0; i < MAX_PARTICLES; i++) {
+        if (i < n) {
+          _pPos[i*3]=_particles[i].x; _pPos[i*3+1]=_particles[i].y; _pPos[i*3+2]=_particles[i].z;
+          const a = _particles[i].life / _particles[i].max;
+          _pCol[i*3]=.95*a; _pCol[i*3+1]=.82*a; _pCol[i*3+2]=.28*a;
+        } else { _pPos[i*3+1] = -1000; }
+      }
+      _pGeo.attributes.position.needsUpdate = true;
+      _pGeo.attributes.color.needsUpdate = true;
+    }
+
+    const _slData = [];
+    for (let i = 0; i < 22; i++) {
+      const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,2.8)]);
+      const m = new THREE.LineBasicMaterial({ color: 0xb8d4ff, transparent: true, opacity: 0 });
+      const l = new THREE.Line(g, m);
+      scene.add(l);
+      _slData.push({ line: l, active: false });
+    }
+
+    function updateSpeedLines(dt, dashing) {
+      _slData.forEach(sl => {
+        if (dashing) {
+          if (!sl.active || sl.line.position.z > 5) {
+            sl.active = true;
+            sl.line.position.set((Math.random()-.5)*7.5, .2+Math.random()*2.6, -14+Math.random()*6);
+            sl.line.material.opacity = .25+Math.random()*.35;
+          }
+          sl.line.position.z += dt*28;
+          if (sl.line.position.z > 5) { sl.line.material.opacity = 0; sl.active = false; }
+        } else {
+          sl.line.material.opacity = Math.max(0, sl.line.material.opacity - dt*4);
+        }
+      });
+    }
+
     function spawnItem(type, laneIndex, z = -75) {
       let mesh;
       if (type === "coin") {
@@ -997,6 +1062,7 @@
 
     function endRun(message = "Run complete") {
       running = false; gameOver = true;
+      cameraShake = 0.8;
       save.best = Math.max(save.best || 0, Math.floor(distance));
       saveGame(); renderStats();
       $("overlayTitle").textContent = message;
@@ -1089,6 +1155,7 @@
         shieldTime = Math.max(0, shieldTime - dt);
         magnetTime = Math.max(0, magnetTime - dt);
         boostTime = Math.max(0, boostTime - dt);
+        updateSpeedLines(dt, dashTime > 0);
 
         const speed = (19 + Math.min(8, elapsed * .12))
           * (activeAbility() === "slow" ? .85 : 1) * (dashTime > 0 ? 1.55 : 1);
@@ -1130,6 +1197,7 @@
               const gained = addCoins(COIN_PER_PICKUP * multiplier);
               runCoins = fromCoinUnits(toCoinUnits(runCoins) + toCoinUnits(gained));
               $("runCoins").textContent = formatCoins(runCoins);
+              spawnCoinParticles(obj.mesh.position.x, obj.mesh.position.y, obj.mesh.position.z);
               scene.remove(obj.mesh); objects.splice(i,1); continue;
             }
             const evaded = dashTime > .05
@@ -1137,6 +1205,7 @@
             if (!evaded) {
               if (shieldTime > 0) {
                 shieldTime = 0;
+                cameraShake = 0.45;
               } else if (activeAbility() === "revive" && !reviveUsed) {
                 reviveUsed = true;
                 scene.remove(obj.mesh);
@@ -1155,6 +1224,14 @@
         $("distance").textContent = `${Math.floor(distance)} m`;
       }
 
+      updateParticles(dt);
+      cameraLean += ((lane - 1) * 0.055 - cameraLean) * Math.min(1, dt * 6);
+      cameraShake = Math.max(0, cameraShake - dt * 5);
+      const _sx = cameraShake > 0 ? (Math.random() - .5) * cameraShake * .28 : 0;
+      const _sy = cameraShake > 0 ? (Math.random() - .5) * cameraShake * .14 : 0;
+      const _bob = (running && !paused) ? Math.sin(elapsed * 8) * 0.035 : 0;
+      camera.position.set(_sx, 3.5 + _bob + _sy, 8.5);
+      camera.rotation.z = cameraLean;
       renderer.render(scene, camera);
     }
 
